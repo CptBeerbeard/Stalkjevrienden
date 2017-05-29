@@ -57,7 +57,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private UserLoginTask mAuthTask = null;
 
     //TODO: deze testedit weghalen
-    
+
     // UI references.
     private EditText mPhoneView;
     private EditText mPasswordView;
