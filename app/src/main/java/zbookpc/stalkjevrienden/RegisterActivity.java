@@ -38,11 +38,20 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -55,6 +64,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      * Id to identity EXTERNAL_STORAGE permission request.
      */
     public static final int PERMISSION_EXTERNAL_STORAGE_LOCATION = 42;
+    private static final String TAG = "RegisterActivity";
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -148,22 +158,23 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         mRegisterFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
-
 //
 //        db.addUser(new User(1,1, "a", "b"));
 //        db.addUser(new User(2,2, "0622222222", "2"));
 //        db.addUser(new User(3,3, "0633333333", "3"));
 //        db.addUser(new User(4,4, "0644444444", "4"));
 //
-        List<User> users = db.getAllUsers();
+//        List<User> users = db.getAllUsers();
+//
+//        for (User u : users) {
+//            String log = "ID: " + u.getId() + " PICTURE: " + u.getPicture() + " PHONE: " + u.getPhone_number()
+//                    + " PASSWORD: " + u.getPassword() + "\n";
+//            text = text + log;
+//        }
+//        Log.d(TAG, "YOLO");
+        //textView.setText(text);
 
-        for (User u : users) {
-            String log = "ID: " + u.getId() + " PICTURE: " + u.getPicture() + " PHONE: " + u.getPhone_number()
-                    + " PASSWORD: " + u.getPassword() + "\n";
-            text = text + log;
-        }
 
-        textView.setText(text);
     }
 
     @TargetApi(16) private boolean checkPermission() {
@@ -415,7 +426,6 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 
     }
 
-
     private interface ProfileQuery {
         String[] PROJECTION = {
                 ContactsContract.CommonDataKinds.Email.ADDRESS,
@@ -432,27 +442,49 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      */
     public class UserRegisterTask extends AsyncTask<Void, Void, Boolean> {
 
+        private final String mId;
+        private final String mPicture;
         private final String mPhone;
         private final String mPassword;
 
         UserRegisterTask(String phone, String password) {
+            // Test values.
+            mId = "1";
+            mPicture = "1";
             mPhone = phone;
             mPassword = password;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
 
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
-
-            db.addUser(new User(1, 1, mPhone, mPassword));
-
+//            String registerQuery = "INSERT INTO USERS VALUES (" + mId + ", " + mPicture + ", " + mPhone + ", " + mPassword + ")";
+//
+//            Connection connection = null;
+//            try {
+//                // create a database connection
+//                connection = DriverManager.getConnection("jdbc:sqlite:/home/zbookpc/Documents/PT4-database/users");
+//                Statement statement = connection.createStatement();
+//                statement.setQueryTimeout(30);  // set timeout to 30 sec.
+//                statement.executeUpdate(registerQuery);
+//
+//            }
+//            catch(SQLException e) {
+//                // if the error message is "out of memory",
+//                // it probably means no database file is found
+//                System.err.println(e.getMessage());
+//            }
+//            finally {
+//                try {
+//                    if (connection != null) {
+//                        connection.close();
+//                    }
+//                }
+//                catch(SQLException e) {
+//                    // connection close failed.
+//                    System.err.println(e);
+//                }
+//            }
             return true;
         }
 
