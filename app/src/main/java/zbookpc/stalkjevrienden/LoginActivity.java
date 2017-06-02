@@ -6,6 +6,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -22,6 +23,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -136,10 +138,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mPasswordView.setError("Please enter your password");
             focusView = mPasswordView;
             cancel = true;
-        } else if (!isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
         }
 
         // Check for a valid email address.
@@ -167,18 +165,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private boolean isPhoneValid(String phone) {
-        //TODO: Replace this with your own logic
-        //moet in db staan
-
-        return true;
-    }
-
-    private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-//        if (mPasswordView != password uit db passend bij phone number) {
-//            return false;
-//        }
-        return true;
+        return PhoneNumberUtils.isGlobalPhoneNumber(phone);
     }
 
     /**
@@ -327,6 +314,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
+                SharedPreferences settings = getSharedPreferences("phone_number", 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("phone", mPhone);
+                editor.apply();
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
@@ -341,4 +332,3 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 }
-
