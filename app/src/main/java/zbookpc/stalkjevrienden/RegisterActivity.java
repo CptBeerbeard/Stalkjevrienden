@@ -39,7 +39,19 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.util.Log;
+import android.util.Base64;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.InputStream;
@@ -64,20 +76,13 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      * Id to identity EXTERNAL_STORAGE permission request.
      */
     public static final int PERMISSION_EXTERNAL_STORAGE_LOCATION = 42;
+    private String encodedImage;
     private static final String TAG = "RegisterActivity";
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserRegisterTask mAuthTask = null;
-    public DatabaseHelper db = new DatabaseHelper(this);
 
     // UI references.
     private EditText mPhoneView;
@@ -157,23 +162,6 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 
         mRegisterFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-
-//
-//        db.addUser(new User(1,1, "a", "b"));
-//        db.addUser(new User(2,2, "0622222222", "2"));
-//        db.addUser(new User(3,3, "0633333333", "3"));
-//        db.addUser(new User(4,4, "0644444444", "4"));
-//
-//        List<User> users = db.getAllUsers();
-//
-//        for (User u : users) {
-//            String log = "ID: " + u.getId() + " PICTURE: " + u.getPicture() + " PHONE: " + u.getPhone_number()
-//                    + " PASSWORD: " + u.getPassword() + "\n";
-//            text = text + log;
-//        }
-//        Log.d(TAG, "YOLO");
-        //textView.setText(text);
-
 
     }
 
@@ -260,8 +248,10 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
                         final Uri imageUri = data.getData();
                         final InputStream imageStream = getContentResolver().openInputStream(imageUri);
                         final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                        ImageView image_view = (ImageView) findViewById(R.id.add_picture);
-                        image_view.setImageBitmap(selectedImage);
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        selectedImage.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                        byte[] imageBytes = baos.toByteArray();
+                        encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -442,15 +432,10 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      */
     public class UserRegisterTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mId;
-        private final String mPicture;
         private final String mPhone;
         private final String mPassword;
 
         UserRegisterTask(String phone, String password) {
-            // Test values.
-            mId = "1";
-            mPicture = "1";
             mPhone = phone;
             mPassword = password;
         }
@@ -458,33 +443,48 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         @Override
         protected Boolean doInBackground(Void... params) {
 
-//            String registerQuery = "INSERT INTO USERS VALUES (" + mId + ", " + mPicture + ", " + mPhone + ", " + mPassword + ")";
-//
-//            Connection connection = null;
-//            try {
-//                // create a database connection
-//                connection = DriverManager.getConnection("jdbc:sqlite:/home/zbookpc/Documents/PT4-database/users");
-//                Statement statement = connection.createStatement();
-//                statement.setQueryTimeout(30);  // set timeout to 30 sec.
-//                statement.executeUpdate(registerQuery);
-//
-//            }
-//            catch(SQLException e) {
-//                // if the error message is "out of memory",
-//                // it probably means no database file is found
-//                System.err.println(e.getMessage());
-//            }
-//            finally {
-//                try {
-//                    if (connection != null) {
-//                        connection.close();
-//                    }
-//                }
-//                catch(SQLException e) {
-//                    // connection close failed.
-//                    System.err.println(e);
-//                }
-//            }
+            Log.d(TAG, "background");
+
+            try {
+                String url = "http://192.168.178.29:9018/adduser";
+                URL obj = new URL(url);
+
+                HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+                //add request header
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.setDoInput(true);
+                con.setDoOutput(true);
+                con.connect();
+
+                // Send post request
+                JSONObject jobj = new JSONObject();
+
+                jobj.put("phone", mPhone);
+                jobj.put("password", mPassword);
+                jobj.put("picture", encodedImage);
+
+                OutputStream os = con.getOutputStream();
+                OutputStreamWriter wr = new OutputStreamWriter(os, "UTF-8");
+                Log.d(TAG, jobj.toString());
+                wr.write(jobj.toString());
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                Log.d(TAG, "lol2");
+                Log.d(TAG, Integer.toString(responseCode));
+
+                if (responseCode == 400) {
+                    return false;
+                }
+
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
+            }
             return true;
         }
 
